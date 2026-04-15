@@ -2,18 +2,17 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { addAuth } from "../utils/authSlice";
+import { BASE_URL } from "../utils/constants";
 
-import {BASE_URL} from "../utils/constants";
 export default function Auth() {
   const auth = useSelector((store) => store.auth);
   const dispatch = useDispatch();
 
-  
   const [isLogin, setIsLogin] = useState(true);
 
-  
+ 
   const [formData, setFormData] = useState({
-    name: "",
+    username: "", 
     email: "",
     password: "",
   });
@@ -28,14 +27,13 @@ export default function Auth() {
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
-    
-    setFormData({ name: "", email: "", password: "" });
+    // 2. Change 'name' to 'username' here as well
+    setFormData({ username: "", email: "", password: "" }); 
   };
 
   const handleFormSubmission = async (e) => {
     e.preventDefault();
     
-   
     const endpoint = isLogin ? "/auth/login" : "/auth/signup";
 
     try {
@@ -44,26 +42,28 @@ export default function Auth() {
         headers: {
           "Content-Type": "application/json",
         },
-        
         body: JSON.stringify(
           isLogin 
             ? { email: formData.email, password: formData.password }
-            : formData
+            : formData // Now sends { username, email, password }
         ),
         credentials: "include",
       });
 
+      const data = await response.json();
+
+      
       if (!response.ok) {
-        toast.error(`Failed to ${isLogin ? "validate" : "register"} user`);
+        toast.error(data.message || `Failed to ${isLogin ? "validate" : "register"} user`);
         return; 
       }
-
-      const data = await response.json();
-      
       
       if (data.success) {
         toast.success(isLogin ? "Validated user successfully" : "Account created successfully");
-        dispatch(addAuth(data.data));
+       
+        if (data.data) {
+          dispatch(addAuth(data.data));
+        }
       } else {
         toast.error(data.message || "Something went wrong");
       }
@@ -77,7 +77,6 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
         
-      
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">
             {isLogin ? "Welcome back" : "Create an account"}
@@ -87,20 +86,20 @@ export default function Auth() {
           </p>
         </div>
 
-       
         <form onSubmit={handleFormSubmission} className="space-y-6">
           
           {!isLogin && (
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Username
               </label>
+              {/* 3. Change name="name" to name="username" and value={formData.username} */}
               <input
                 type="text"
-                name="name"
-                id="name"
-                placeholder="John Doe"
-                value={formData.name}
+                name="username"
+                id="username"
+                placeholder="JohnDoe123"
+                value={formData.username}
                 onChange={handleInputChange}
                 required={!isLogin}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -148,7 +147,6 @@ export default function Auth() {
           </button>
         </form>
 
-       
         <div className="mt-6 text-center text-sm text-gray-600">
           {isLogin ? "New user? " : "Already a user? "}
           <button
