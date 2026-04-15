@@ -3,10 +3,12 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { addAuth } from "../utils/authSlice";
 import { BASE_URL } from "../utils/constants";
+import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const auth = useSelector((store) => store.auth);
   const dispatch = useDispatch();
+  const navigate=useNavigate();
 
   const [isLogin, setIsLogin] = useState(true);
 
@@ -27,7 +29,7 @@ export default function Auth() {
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
-    // 2. Change 'name' to 'username' here as well
+   
     setFormData({ username: "", email: "", password: "" }); 
   };
 
@@ -45,7 +47,7 @@ export default function Auth() {
         body: JSON.stringify(
           isLogin 
             ? { email: formData.email, password: formData.password }
-            : formData // Now sends { username, email, password }
+            : formData
         ),
         credentials: "include",
       });
@@ -63,6 +65,7 @@ export default function Auth() {
        
         if (data.data) {
           dispatch(addAuth(data.data));
+          navigate("/");
         }
       } else {
         toast.error(data.message || "Something went wrong");
@@ -93,7 +96,7 @@ export default function Auth() {
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                 Username
               </label>
-              {/* 3. Change name="name" to name="username" and value={formData.username} */}
+            
               <input
                 type="text"
                 name="username"
